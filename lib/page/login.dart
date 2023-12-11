@@ -32,12 +32,12 @@ class Login extends StatelessWidget {
             if(snapshot.data==null){
               return CupertinoActivityIndicator();
             }else{
-
             int datos=snapshot.data!.length;
+            List<QrCartillaResponse>lista=snapshot.data!;
             if(datos>0){
               Future.microtask(() => {
                 Navigator.pushReplacement(context, PageRouteBuilder(
-                    pageBuilder: ( _, __ , ___ ) => Dashboard(),
+                    pageBuilder: ( _, __ , ___ ) => MainDashboard(lista: lista,),
                     transitionDuration:const Duration( seconds: 3)
                 )
                 )
@@ -67,32 +67,35 @@ class Login extends StatelessWidget {
                 String labor=split[2];
                 String fechainicio=split[3];
                 String fechatermino=split[4];
+                String swunoauno=split[5];
                 var datefechainicio=DateTime.parse(fechainicio);
                 var datefechatermino=DateTime.parse(fechatermino);
-                final today=DateTime.now();
-                print(datefechatermino.difference(today));
-
-                if(datefechatermino.difference(today).inDays>0){
-
+                final now=DateTime.now();
+                DateTime today = new DateTime(now.year, now.month, now.day);
+   
+                
+                if( today.compareTo(datefechainicio)==0){
+                //if(datefechatermino.difference(today).inDays>0){//
                   final qr=QrCartillaResponse(
                     idcartilla: idcartilla,
                     cuartel: cuartel,
                     labor: labor,
                     fechainicio: fechatermino,
-                    fechatermino: fechatermino
+                    fechatermino: fechatermino,
+                    swunoauno:swunoauno
                   ) ;
 
                   final respuesta= await DBProvider.db.consultaqr(qr);
 
                   if(respuesta.length<1) await DBProvider.db.insertarqr(qr);
-
+                  List<QrCartillaResponse>lista=await DBProvider.db.getcartillasdisponibles();
 
                   Navigator.push(context,  MaterialPageRoute(
-                  builder: ((context) =>  Dashboard())));
+                  builder: ((context) =>  MainDashboard(lista:lista))));
                 }else{
                    showDialog(
-                  context: context,
-                  builder: (BuildContext context) => CupertinoAlertDialog(
+                    context: context,
+                    builder: (BuildContext context) => CupertinoAlertDialog(
                     title: new Text("Qr Invalido"),
                     content: new Text("Estimado usuario QR escaneado no es valido, fecha de termino ya concluida "),
                    
@@ -103,7 +106,7 @@ class Login extends StatelessWidget {
               
               }catch(e) {
                   // make it explicit that this function can throw exceptions
-                  print('error en qr $e');
+                  
                  showDialog(
                   context: context,
                   builder: (BuildContext context) => CupertinoAlertDialog(

@@ -16,7 +16,7 @@ class QrProvider extends ChangeNotifier{
 
   Future<List<QrCartillaResponse>> getqravailable() async{
     List<QrCartillaResponse> lista=DBProvider.db.getcartillasdisponibles() as List<QrCartillaResponse>;
-    print(lista);
+    
     return lista;
 
   }

@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.contratistas">
+    package="com.dev.verfwork">
    <application
-        android:label="contratistas"
+        android:label="VerfWork"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

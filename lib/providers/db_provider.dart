@@ -12,7 +12,8 @@ class DBProvider extends ChangeNotifier{
   DBProvider._();
 
   Future<Database> get database async=>_database ??= await initDB();
-
+  
+  
   Future<Database> initDB() async{
     Directory documentsDirectory=await getApplicationDocumentsDirectory();
     final path=join(documentsDirectory.path,'VerfrutContratista.db');
@@ -28,15 +29,57 @@ class DBProvider extends ChangeNotifier{
             Cuartel TEXT,
             Labor TEXT,
             FechaInicio TEXT,
-            FechaTermino TEXT)
+            FechaTermino TEXT,
+            SwUnoaUno TEXT
+            )
             '''
           );
+
+
+          await db.execute(
+            '''
+            CREATE TABLE TRABAJADORESXCONTRATISTA(
+              
+              IdEmpresa TEXT,
+              Rut TEXT,
+              Digito TEXT,
+              Nombre TEXT,
+              Qr TEXT,
+              Fecha TEXT,
+              IdTrabXContratista TEXT
+            )
+            '''
+          );
+
+          await db.execute('''
+            CREATE TABLE ENTREGAS(
+              IdEntrega integer primary key,
+              IdCartilla TEXT,
+              Qr TEXT,
+              Cantidad integer,
+              Fecha TEXT,
+              Hora TEXT,
+              Nombre_trabajador TEXT,
+              Rut TEXT,
+              SwSincronizado TEXT
+            )
+
+
+          ''');
+
+
+        },
+        onUpgrade: (Database db,int olversion,int newverion)async{
+          if (olversion < newverion) {
+
+            // you can execute drop table and create table
+            await db.execute("ALTER TABLE TRABAJADORESXCONTRATISTA ADD COLUMN IdTrabXContratista TEXT");
+          }
         }
     );
   }
 
 
-  
   Future<List<QrCartillaResponse>> consultaqr  (QrCartillaResponse qrcartilla)async{
     String idcartilla=qrcartilla.idcartilla;
    
@@ -49,7 +92,8 @@ class DBProvider extends ChangeNotifier{
       cuartel: res[index]['Cuartel'],
       labor:res[index]['Labor'],
       fechainicio: res[index]['FechaInicio'],
-      fechatermino: res[index]['FechaTermino']
+      fechatermino: res[index]['FechaTermino'],
+      swunoauno: res[index]['SwUnoaUno']
     ));
   } 
 
@@ -62,10 +106,13 @@ class DBProvider extends ChangeNotifier{
 
 
   Future<List<QrCartillaResponse>>getcartillasdisponibles()async{
-    String fecha=DateTime.now().toString();
+
+    final now=DateTime.now();
+    DateTime today = new DateTime(now.year, now.month, now.day);
+    String fecha=today.toString();
     final db=await database;
     final List<Map<String,dynamic>>res=await db.rawQuery('''
-      SELECT * FROM CARTILLAS WHERE FechaTermino>='$fecha'  
+      SELECT * FROM CARTILLAS WHERE FechaInicio='$fecha'  
       ''');
 
     return List.generate(res.length, (index) => QrCartillaResponse(
@@ -73,7 +120,8 @@ class DBProvider extends ChangeNotifier{
         cuartel: res[index]['Cuartel'],
         labor:res[index]['Labor'],
         fechainicio: res[index]['FechaInicio'],
-        fechatermino: res[index]['FechaTermino']
+        fechatermino: res[index]['FechaTermino'],
+        swunoauno: res[index]['SwUnoaUno']
     ));
   }
 
