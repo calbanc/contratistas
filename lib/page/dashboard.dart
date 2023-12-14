@@ -194,6 +194,9 @@ class Dashboard extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          MaterialButton(onPressed: (){},child: Icon(Icons.settings),)
+        ],
       ),
       body:
           Column(
