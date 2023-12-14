@@ -10,14 +10,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:intl/intl.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 class Dashboard extends StatelessWidget {
 
-   Dashboard({super.key,required this.lista});
-  
-
+  Dashboard({super.key,required this.lista});
   List<QrCartillaResponse> lista;
-
   @override
   Widget build(BuildContext context) {
     final trabajadorcontratisprovider=Provider.of<TrabajadorxContratistaProvider>(context);
@@ -26,17 +24,27 @@ class Dashboard extends StatelessWidget {
     TextEditingController controlladorcantidad=TextEditingController();
     searchentry(List<Trabajador>?listatrabajador)async {
 
-      
+
+      final date=DateFormat('dd/MM/yyyy').format(DateTime.now());
+      final hora=DateTime.now();
       
       if(trabajadorcontratisprovider.Swunoauno=="1"){
-        final date=DateFormat('dd/MM/yyyy').format(DateTime.now());
-              EntregaResponse entrega=EntregaResponse(idcartilla: trabajadorcontratisprovider.IdCartilla,qr: listatrabajador![0].qr, cantidad: 1, fecha: date, swsincronizado: '0');
+              Entrega entrega=Entrega(
+                  idcartilla: trabajadorcontratisprovider.IdCartilla,
+                  qr: listatrabajador![0].qr,
+                  cantidad: 1,
+                  fecha: date,
+                  hora:hora.toString() ,
+                  swsincronizado: '0'
+              );
 
-              List<EntregaResponse>? listaentregado=await trabajadorcontratisprovider.entrega(entrega);
+              List<Entrega>? listaentregado=await trabajadorcontratisprovider.entrega(entrega);
 
               if(listaentregado==null){
-                //hacemos una insercion nueva
                 final insert=await trabajadorcontratisprovider.insertentry(entrega);
+                List<QrCartillaResponse>?fechainiciocartilla=await trabajadorcontratisprovider.getfechainiciobyidcartilla(trabajadorcontratisprovider.IdCartilla);
+                fechainiciocartilla==null || fechainiciocartilla.length==0 ? null
+                    : trabajadorcontratisprovider.updatehorainicio(trabajadorcontratisprovider.IdCartilla) ;
                 if(insert==1){
                   Fluttertoast.showToast(
                                         msg: "Insertado correctamente",
@@ -46,33 +54,58 @@ class Dashboard extends StatelessWidget {
                                         timeInSecForIosWeb: 1,
                                         textColor: Colors.black,
                                         fontSize: 16.0
-                                    );
+                  );
                 }
                 
-              }else{      
-                EntregaResponse nuevaentrega=EntregaResponse(identrega: listaentregado[0].identrega,idcartilla: listaentregado[0].idcartilla,
-                  qr: listaentregado[0].qr,cantidad: listaentregado[0].cantidad!+1,fecha: date,swsincronizado: '0');
-                final update=await trabajadorcontratisprovider.updateentry(nuevaentrega);
-                 Fluttertoast.showToast(
-                                        msg: "Insertado correctamente",
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.BOTTOM,
-                                        backgroundColor: Colors.grey[300],
-                                        timeInSecForIosWeb: 1,
-                                        textColor: Colors.black,
-                                        fontSize: 16.0
-                                    );
-        
+              }else{     
+                DateTime horaentrega=DateTime.parse(listaentregado[0].hora!);
+                Duration diff1 = hora.difference(horaentrega);
+                
+                if(diff1.inMinutes>1){
+                  Entrega nuevaentrega=Entrega(identrega: listaentregado[0].identrega,idcartilla: listaentregado[0].idcartilla,
+                  qr: listaentregado[0].qr,cantidad: listaentregado[0].cantidad!+1,fecha: date,hora:hora.toString(),swsincronizado: '0');
+                  final update=await trabajadorcontratisprovider.updateentry(nuevaentrega);
+                  List<QrCartillaResponse>?fechainiciocartilla=await trabajadorcontratisprovider.getfechainiciobyidcartilla(trabajadorcontratisprovider.IdCartilla);
+                  fechainiciocartilla==null || fechainiciocartilla.length==0 ? null
+                  : trabajadorcontratisprovider.updatehorainicio(trabajadorcontratisprovider.IdCartilla) ;
+
+                  Fluttertoast.showToast(
+                      msg: "Insertado correctamente",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      backgroundColor: Colors.grey[300],
+                      timeInSecForIosWeb: 1,
+                      textColor: Colors.black,
+                      fontSize: 16.0
+                  );
+                }else{
+                    Fluttertoast.showToast(
+                        msg: "Entrega consecutiva,debe esperar un minuto",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.grey[300],
+                        timeInSecForIosWeb: 1,
+                        textColor: Colors.black,
+                        fontSize: 16.0
+                    );
+                }
+               
               
               }
 
                      
       }else{
 
-         final date=DateFormat('dd/MM/yyyy').format(DateTime.now());
-        EntregaResponse entrega=EntregaResponse(idcartilla: trabajadorcontratisprovider.IdCartilla,qr: listatrabajador![0].qr, cantidad: 1, fecha: date, swsincronizado: '0');
+         
+        Entrega entrega=Entrega(
+            idcartilla: trabajadorcontratisprovider.IdCartilla,
+            qr: listatrabajador![0].qr,
+            cantidad: 1,
+            fecha: date,
+            hora:hora.toString(),
+            swsincronizado: '0');
 
-      List<EntregaResponse>? listaentregado=await trabajadorcontratisprovider.entrega(entrega);
+      List<Entrega>? listaentregado=await trabajadorcontratisprovider.entrega(entrega);
        showDialog(
           context: context,
            builder: (context)=>AlertDialog(
@@ -90,8 +123,12 @@ class Dashboard extends StatelessWidget {
 
                 if(listaentregado==null){
                   entrega.cantidad=int.parse( controlladorcantidad.text);
-                    final insert=await trabajadorcontratisprovider.insertentry(entrega);
-                    if(insert==1){
+                  final insert=await trabajadorcontratisprovider.insertentry(entrega);
+                  List<QrCartillaResponse>?fechainiciocartilla=await trabajadorcontratisprovider.getfechainiciobyidcartilla(trabajadorcontratisprovider.IdCartilla);
+                  fechainiciocartilla==null || fechainiciocartilla.length==0 ? null
+                      : trabajadorcontratisprovider.updatehorainicio(trabajadorcontratisprovider.IdCartilla) ;
+
+                  if(insert==1){
                         Fluttertoast.showToast(
                                               msg: "Insertado correctamente",
                                               toastLength: Toast.LENGTH_SHORT,
@@ -103,9 +140,12 @@ class Dashboard extends StatelessWidget {
                                           );
                       }
                 }else{
-                  
-                  EntregaResponse nuevaentrega=EntregaResponse(identrega: listaentregado[0].identrega,idcartilla: listaentregado[0].idcartilla,
-                  qr: listaentregado[0].qr,cantidad: listaentregado[0].cantidad!+int.parse(controlladorcantidad.text),fecha: date,swsincronizado: '0');
+                  DateTime horaentrega=DateTime.parse(listaentregado![0].hora!); 
+                  Duration diff1 = hora.difference(horaentrega);
+
+                  if(diff1.inMinutes>1){
+                  Entrega nuevaentrega=Entrega(identrega: listaentregado[0].identrega,idcartilla: listaentregado[0].idcartilla,
+                  qr: listaentregado[0].qr,cantidad: listaentregado[0].cantidad!+int.parse(controlladorcantidad.text),fecha: date,hora:hora.toString(),swsincronizado: '0');
                   final update=await trabajadorcontratisprovider.updateentry(nuevaentrega);
                    Fluttertoast.showToast(
                                               msg: "Insertado correctamente",
@@ -116,42 +156,42 @@ class Dashboard extends StatelessWidget {
                                               textColor: Colors.black,
                                               fontSize: 16.0
                                           );
+                  }else{
+                     Fluttertoast.showToast(
+                                        msg: "Entrega consecutiva,debe esperar un minuto",
+                                        toastLength: Toast.LENGTH_SHORT,
+                                        gravity: ToastGravity.BOTTOM,
+                                        backgroundColor: Colors.grey[300],
+                                        timeInSecForIosWeb: 1,
+                                        textColor: Colors.black,
+                                        fontSize: 16.0
+                                    );
+                  }
+
+                
       
                 }
                 Navigator.pop(context);
 
               }, child: Text('Registrar'))
             ],
-           ));  
-
-      
-
+           ));
               Fluttertoast.showToast(
-                                 msg: "Insertado correctamente",
-                                 toastLength: Toast.LENGTH_SHORT,
-                                 gravity: ToastGravity.BOTTOM,
-                                 backgroundColor: Colors.grey[300],
-                                 timeInSecForIosWeb: 1,
-                                 textColor: Colors.black,
-                                 fontSize: 16.0
-                             );
- 
-
-
-
+                  msg: "Insertado correctamente",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.grey[300],
+                  timeInSecForIosWeb: 1,
+                  textColor: Colors.black,
+                  fontSize: 16.0
+              );
       }
-
-     
-
     }
-
-
 
     return Scaffold(
       appBar: AppBar(
         title:const Text('VERFTWORK',style: TextStyle(color: Colors.black),),
         centerTitle: true,
-
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -170,10 +210,7 @@ class Dashboard extends StatelessWidget {
                             Icon(Icons.sync),
                            Text('Sincronizar',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
                          ],),
-                         
-                         
-                         
-                         color: Colors.orangeAccent,
+                        color: Colors.green[700],
                          onPressed: () async {
 
                            bool conexion=await conexionprovider.isOnlineNet();
@@ -194,35 +231,53 @@ class Dashboard extends StatelessWidget {
                              });
                              Navigator.of(context, rootNavigator: true).pop();
 
-                           
-                              final today= DateFormat('dd/MM/yyyy').format(DateTime.now());
-                              
+                             final today= DateFormat('dd/MM/yyyy').format(DateTime.now());
+
+                             List<QrCartillaResponse>?listacartillasdisponible=await trabajadorcontratisprovider.getcartillastosync(today);
+                             if(listacartillasdisponible.length>0){
+                               http.Response respuestasynchora;
+                               CartillaUpdateResponse respuestacuerpo;
+                               listacartillasdisponible.forEach((element) async =>{
+
+                                 //print( await trabajadorcontratisprovider.synccartillashoras(element)),
+                                 respuestasynchora=await trabajadorcontratisprovider.synccartillashoras(element),
+
+                                 if(respuestasynchora.statusCode==200){
+                                   respuestacuerpo=CartillaUpdateResponse.fromJson(json.decode(respuestasynchora.body)),
+
+
+                                   await trabajadorcontratisprovider.updatecartillafinaltime(respuestacuerpo.cartilla)
+
+                                 }
+
+                               });
+                             }
+
+
+
                              List<EntregaResponse>? listforsync=await trabajadorcontratisprovider.getentryforsync(today);
                               if(listforsync.length<1){
-                                 showDialog(context: context, builder: ((context) {
+                                showDialog(context: context, builder: ((context) {
                                return Center(child: CupertinoAlertDialog(
                                  content: Row(children: const [
-                                
                                    Text('Sin Entregas por sincronizar'),
                                  ],),
                                ),);
                              }));
-                              }else{
+                            }else{
                               SyncEntregasResponse respuestasync;
-                             
-                              listforsync.forEach((element) async=>{
+                              listforsync.forEach((element)async=>{
                                 respuestasync=await trabajadorcontratisprovider.sync(element),
-                                if(respuestasync.status=="ok"  ){        
+                                if(respuestasync.status=="ok"){
                                   await trabajadorcontratisprovider.updateSync(respuestasync.cartilladetalle.idEntrega.toString())
                                 }
+                              });
+                            }
 
 
-                             });
-                              }
-                            
 
-                           }else{
-                             
+
+                           }else{                            
                              Fluttertoast.showToast(
                                  msg: "Estimado usuario no tiene conexion para sincronizar datos",
                                  toastLength: Toast.LENGTH_SHORT,
@@ -233,38 +288,55 @@ class Dashboard extends StatelessWidget {
                                  fontSize: 16.0
                              );
                            }
-
-
-
                          },),
 
                    ),
-                 
-               
               const Padding(padding: EdgeInsets.only(top: 10),child: Text('Cartillas',textAlign: TextAlign.start,),),
-
               Row(children: [
+
                 Container(
+                    width:size.width*0.7,
+                    child: FutureBuilder(
+                      future: trabajadorcontratisprovider.getcartillasdisponibles() ,
+                      builder: (BuildContext context,AsyncSnapshot<List<QrCartillaResponse>?>snapshot) {
+                        if(snapshot.data==null){
+                          return CupertinoActivityIndicator();
+                        }else{
+                          List<QrCartillaResponse> lista=snapshot.data!;
+                          return DropdownSearch<QrCartillaResponse>(
+                            key: trabajadorcontratisprovider.formkeylistacartilla,
+                            items:lista,
+                            onChanged: (QrCartillaResponse? value) =>{
+                              trabajadorcontratisprovider.setidcartilla=value!.idcartilla,
+                              trabajadorcontratisprovider.setswunoauno=value!.swunoauno,
+                            } ,
+                            itemAsString: (QrCartillaResponse qr)=>qr.cuartel,
+                          );
+                        }
+                      }
+
+
+                    ),
+                ),
+           /*     Container(
                   width: size.width*0.7,
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: DropdownSearch<QrCartillaResponse>(
                   items:lista!,
                   onChanged: (QrCartillaResponse? value) =>{
-                    
                     trabajadorcontratisprovider.setidcartilla=value!.idcartilla,
                     trabajadorcontratisprovider.setswunoauno=value!.swunoauno,
-                    
                   } ,
                   itemAsString: (QrCartillaResponse qr)=>qr.cuartel,
                 )
-                ),
+                ),*/
                 Container(
                   width: size.width*0.3,
                   height: 45,
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: Colors.orangeAccent,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40),),
                       textStyle:const TextStyle(
                       fontSize: 15,
@@ -287,26 +359,32 @@ class Dashboard extends StatelessWidget {
                           String fechatermino=split[4];
                           String swunoauno=split[5];
                           var datefechainicio=DateTime.parse(fechainicio);
-                          var datefechatermino=DateTime.parse(fechatermino);
-                          
                           final now=DateTime.now();
-                          DateTime today = new DateTime(now.year, now.month, now.day);
-                
-
+                          DateTime today = new DateTime(now.year, now.month, now.day);                
                           if( today.compareTo(datefechainicio)==0){
-                          final qr=QrCartillaResponse(
-                            idcartilla: idcartilla,
-                            cuartel: cuartel,
-                            labor: labor,
-                            fechainicio: fechatermino,
-                            fechatermino: fechatermino,
-                            swunoauno: swunoauno
-                          ) ;
+                            final qr=QrCartillaResponse(
+                              idcartilla: idcartilla,
+                              cuartel: cuartel,
+                              labor: labor,
+                              fechainicio: fechatermino,
+                              fechatermino: fechatermino,
+                              swunoauno: swunoauno,
+                              swSincronizado: '0'
+                            ) ;
+                            final respuesta= await trabajadorcontratisprovider.consultaqr(qr);
+                            if(respuesta.length<1) {
+                              await trabajadorcontratisprovider.insertarqr(qr);
+                              this.lista.add(qr);
+                            }else{
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) => CupertinoAlertDialog(
+                                    title: new Text("Qr Cartilla"),
+                                    content: new Text("Estimado usuario QR escaneado ya fue registrado anteriormente"),
 
-                          final respuesta= await trabajadorcontratisprovider.consultaqr(qr);
-
-                          if(respuesta.length<1) await trabajadorcontratisprovider.insertarqr(qr);
-                          this.lista.add(qr);
+                                  )
+                              );
+                            }
 
                           }else{
                             showDialog(
@@ -329,16 +407,12 @@ class Dashboard extends StatelessWidget {
                             );
                         }
                       },
-                     
-                    
                     )
                 )
-                 
-              
               ],),
               
               const SizedBox(height: 20,),  
-                Row(
+                  Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   FutureBuilder(future: trabajadorcontratisprovider.listentregas(trabajadorcontratisprovider.IdCartilla),
@@ -346,48 +420,54 @@ class Dashboard extends StatelessWidget {
                       if(snapshot.data==null){
                         return Text('0');
                       }else{
-                      
                         String cantidadentregas=snapshot.data![0].cantidad.toString();
-                 
                         return Text(cantidadentregas == "null" ?'0':cantidadentregas,style: TextStyle(fontWeight: FontWeight.w900,fontSize: 20),);
-                      
                       }
                   }),
-                                                            
-                  //Text('0',style: TextStyle(fontWeight: FontWeight.w900,fontSize: 20),),
 
                 ],
-              ), 
+              ),   
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text('Entregas',style: TextStyle(fontSize: 20),),
-   /*                Text('Bins',style: TextStyle(fontSize: 20),), */
-
                 ],
               ),
               const SizedBox(height: 20,),
                 CupertinoButton(
                   color: Colors.blueGrey,
-                  child: const Text('Cerrar Cartilla',),onPressed: (){},
-                ),
+                  child: const Text('Cerrar Cartilla',),
+                  onPressed: ()async{
 
+                    List<QrCartillaResponse>?fechahoratermino=await trabajadorcontratisprovider.gethoraterminobyidcartilla(trabajadorcontratisprovider.IdCartilla);
+                    fechahoratermino==null || fechahoratermino.length==0 ? null
+                        : trabajadorcontratisprovider.updatehoratermino(trabajadorcontratisprovider.IdCartilla) ;
+                    trabajadorcontratisprovider.formkeylistacartilla.currentState!.clear();
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) => CupertinoAlertDialog(
+                          title: new Text("Cierre de planilla"),
+                          content: new Text("Planilla Cerrada correctamente"),
+
+                        )
+
+
+                    );
+
+                  },
+                ),
                 const SizedBox(height: 20,),
- 
-                FutureBuilder(future: trabajadorcontratisprovider.listadoentregas(trabajadorcontratisprovider.IdCartilla), 
+                 FutureBuilder(future: trabajadorcontratisprovider.listadoentregas(trabajadorcontratisprovider.IdCartilla), 
                 builder: (BuildContext context,AsyncSnapshot<List<ListadoEntregaResponse>?>snapshot){
                     if(snapshot.data==null){
                         return CupertinoActivityIndicator();
                     }else{
-                      List<ListadoEntregaResponse>listado= snapshot.data!;
-                      
+                      List<ListadoEntregaResponse>listado= snapshot.data!;           
                       return _widgetlistado(listado:listado);
 
                     }
                   }
                 ),
-
-               
                 Expanded(
                   child: Align(
                       alignment: FractionalOffset.bottomCenter,
@@ -414,15 +494,17 @@ class Dashboard extends StatelessWidget {
                                 );
                                 return;
                               }
-                                      
                                 String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode('#3D8BEF', 'Cancelar', true, ScanMode.QR);
                                 if(barcodeScanRes!="-1"){
                                 List<Trabajador>? lista=await trabajadorcontratisprovider.gettrabajadorbyqr(barcodeScanRes);
-                              /*   lista==null ? Navigator.push(context,  MaterialPageRoute(
-                                               builder: ((context) =>  AddTrabajador(qr:barcodeScanRes,idcartilla:trabajadorcontratisprovider.IdCartilla,swtipoescan:trabajadorcontratisprovider.Swunoauno)))):searchentry(lista);
-                              */
-                                  
-                                
+                                 lista==null ? Future.microtask(() => {
+                                  Navigator.pushReplacement(context, PageRouteBuilder(
+                                    pageBuilder: ( _, __ , ___ ) => AddTrabajador(qr:barcodeScanRes,idcartilla:trabajadorcontratisprovider.IdCartilla,swtipoescan:trabajadorcontratisprovider.Swunoauno),
+                                    transitionDuration:const Duration( seconds: 1)
+                                    )
+                                  )
+                  
+                                }):searchentry(lista);
                                 }
                                 
                                 
@@ -468,8 +550,11 @@ class _widgetlistado extends StatelessWidget {
                 elevation: 10,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.horizontal(left: Radius.circular(8),right: Radius.circular(8))),
                       color: Colors.white,
-                child: Row(children: [
-                  SizedBox(width: 20,height: 20,),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+
+                  children: [
+                  const SizedBox(width: 20,height: 20,),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child:const FadeInImage(
@@ -479,14 +564,16 @@ class _widgetlistado extends StatelessWidget {
                                     placeholder: AssetImage('assets/verfrutgreen.png'),
                     ),
                   ),
-                  const SizedBox(width: 20,height: 20,),
+                  const SizedBox(width: 40,height: 20,),
                   Column(
                     children: [
+                    const SizedBox(height: 5,),
                     Text(nombretrabajador!,style: TextStyle(color: Colors.green[900],fontWeight: FontWeight.w800),),
                     const SizedBox(height:5),
                     Text('Entregas: '+cantidad.toString(),style: TextStyle(color: Colors.blue[900],fontWeight: FontWeight.w500),),
                     const SizedBox(height: 5),
                     Text('Labor: '+labor.toString(),style: TextStyle(color: Colors.blue[900],fontWeight: FontWeight.w500),),
+                    const SizedBox(height: 5,)
                   ],)
             
                   
@@ -494,7 +581,7 @@ class _widgetlistado extends StatelessWidget {
               ),
             );
 
-          }),
+          }), 
         ),
 
       

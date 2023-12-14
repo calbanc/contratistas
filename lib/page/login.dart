@@ -82,7 +82,9 @@ class Login extends StatelessWidget {
                     labor: labor,
                     fechainicio: fechatermino,
                     fechatermino: fechatermino,
-                    swunoauno:swunoauno
+                    swunoauno:swunoauno,
+                    swSincronizado: '0'
+
                   ) ;
 
                   final respuesta= await DBProvider.db.consultaqr(qr);
@@ -90,8 +92,14 @@ class Login extends StatelessWidget {
                   if(respuesta.length<1) await DBProvider.db.insertarqr(qr);
                   List<QrCartillaResponse>lista=await DBProvider.db.getcartillasdisponibles();
 
-                  Navigator.push(context,  MaterialPageRoute(
-                  builder: ((context) =>  MainDashboard(lista:lista))));
+                  Future.microtask(() => {
+                    Navigator.pushReplacement(context, PageRouteBuilder(
+                        pageBuilder: ( _, __ , ___ ) => MainDashboard(lista: lista,),
+                        transitionDuration:const Duration( seconds: 3)
+                    )
+                    )
+
+                  });
                 }else{
                    showDialog(
                     context: context,
@@ -117,10 +125,6 @@ class Login extends StatelessWidget {
                 );
               //   rethrow;
               }
-              
-              
-              
-             
             },
             child:Image(image: AssetImage('assets/qrlogin.png'),width: MediaQuery.of(context).size.width*0.7,) ,
           ),

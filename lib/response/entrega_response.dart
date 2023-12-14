@@ -9,6 +9,9 @@ class EntregaResponse{
     String? hora;
     String? swsincronizado;
     String? nombre_trabajador;
+    String? idtrabajadorxcontratista;
+    String? digito;
+    String? rut;
     EntregaResponse({
         this.identrega,
          this.idcartilla,
@@ -17,7 +20,10 @@ class EntregaResponse{
          this.fecha,
           this.hora,
          this.swsincronizado,
-         this.nombre_trabajador
+         this.nombre_trabajador,
+        this.idtrabajadorxcontratista,
+        this.digito,
+        this.rut
     });
 
   
@@ -28,8 +34,11 @@ class EntregaResponse{
         cantidad: json["Cantidad"],
         fecha: json["Fecha"],
         hora:json["Hora"],
-        nombre_trabajador:json["Nombre_trabajador"],
+        nombre_trabajador:json["Nombre"],
         swsincronizado: json["SwSincronizado"],
+        idtrabajadorxcontratista: json["IdTrabXContratista"],
+        digito: json["Digito"],
+        rut:json["Rut"]
     );
 
     Map<String, dynamic> toJson() => {
@@ -39,7 +48,10 @@ class EntregaResponse{
         "Cantidad": cantidad,
         "Fecha": fecha,
         "Hora":hora,
-        "Nombre_trabajador":nombre_trabajador,
+        "Nombre":nombre_trabajador,
         "SwSincronizado": swsincronizado,
+        "IdTrabXContratista":idtrabajadorxcontratista,
+        "Digito":digito,
+        "Rut":rut
     };
 }

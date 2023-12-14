@@ -18,11 +18,7 @@ class MainDashboard extends StatelessWidget {
         ChangeNotifierProvider(create: (context)=> new TrabajadorxContratistaProvider()),
         ChangeNotifierProvider(create: (context)=> new Connectivity_provider())
       ],
-
       child: Dashboard(lista: lista)
     );
-
-
-
   }
 }

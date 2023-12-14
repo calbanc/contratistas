@@ -18,10 +18,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Contratistas',
-      initialRoute: 'addtrabajador',
+      initialRoute: 'login',
       routes: {
         'login':(_)=> Login(),
-        'addtrabajador':(_)=>AddTrabajador()
+      
         
         
       },

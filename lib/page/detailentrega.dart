@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../response/response.dart';
-
+import 'package:fluttertoast/fluttertoast.dart';
 
 class DetailEntrega extends StatelessWidget {
   
@@ -37,7 +37,7 @@ class _detailentrega extends StatelessWidget {
      final trabajadorcontratisprovider=Provider.of<TrabajadorxContratistaProvider>(context);
 
     return Scaffold(
-       appBar: AppBar(title: Text('Detalle Entrega')),
+       appBar: AppBar(title:const Text('Detalle Entrega')),
        body: Column(
           children: [
              Padding(
@@ -122,7 +122,7 @@ class _detailentrega extends StatelessWidget {
                 ),
               
             ),
-            SizedBox(width: 20,height: 20,),
+            const SizedBox(width: 20,height: 20,),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -136,21 +136,34 @@ class _detailentrega extends StatelessWidget {
 
                     ),
                   onPressed: ()async{
-                    print(listado.cantidad);
+                    
                     int cantidad=listado.cantidad;
                     if(cantidad==1){
                       //Seteamos a 0
-                      print('asdasd');
+                      cantidad=0;
+                      final date=DateFormat('dd/MM/yyyy').format(DateTime.now());
+                      Entrega nuevaentrega=Entrega(identrega: listado.identrega,idcartilla: listado.idcartilla,
+                      qr: listado.qr,cantidad: cantidad,fecha: date,swsincronizado: '0');
+                      final update=await trabajadorcontratisprovider.updateentry(nuevaentrega);
                     }else{
                       cantidad=cantidad-1;
                       final date=DateFormat('dd/MM/yyyy').format(DateTime.now());
-                      EntregaResponse nuevaentrega=EntregaResponse(identrega: listado.identrega,idcartilla: listado.idcartilla,
+                      Entrega nuevaentrega=Entrega(identrega: listado.identrega,idcartilla: listado.idcartilla,
                       qr: listado.qr,cantidad: cantidad,fecha: date,swsincronizado: '0');
                       final update=await trabajadorcontratisprovider.updateentry(nuevaentrega);
-                      print('actualizado $update');
+                      
                     }
+                     Fluttertoast.showToast(
+                                 msg: "Entregas disminuidas",
+                                 toastLength: Toast.LENGTH_SHORT,
+                                 gravity: ToastGravity.BOTTOM,
+                                 backgroundColor: Colors.grey[300],
+                                 timeInSecForIosWeb: 1,
+                                 textColor: Colors.black,
+                                 fontSize: 16.0
+                             );
                   },
-                  child: Row(
+                  child:const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                     Icon(Icons.exposure_minus_1_outlined),
@@ -160,7 +173,7 @@ class _detailentrega extends StatelessWidget {
                   
                 ),
               ),
-              SizedBox(height: 8,width: 8,),
+              const SizedBox(height: 8,width: 8,),
               Container(
                 width: MediaQuery.of(context).size.width*0.4,
                 height: 60,
@@ -170,8 +183,25 @@ class _detailentrega extends StatelessWidget {
                   backgroundColor: Colors.red[900]
                 ),
 
-                  onPressed: (){},
-                  child: Row(
+                  onPressed: ()async {
+                      int cantidad=listado.cantidad;
+                  
+                      cantidad=0;
+                      final date=DateFormat('dd/MM/yyyy').format(DateTime.now());
+                      Entrega nuevaentrega=Entrega(identrega: listado.identrega,idcartilla: listado.idcartilla,
+                      qr: listado.qr,cantidad: cantidad,fecha: date,swsincronizado: '0');
+                      final update=await trabajadorcontratisprovider.updateentry(nuevaentrega);
+                      Fluttertoast.showToast(
+                                 msg: "Entregas eliminadas",
+                                 toastLength: Toast.LENGTH_SHORT,
+                                 gravity: ToastGravity.BOTTOM,
+                                 backgroundColor: Colors.grey[300],
+                                 timeInSecForIosWeb: 1,
+                                 textColor: Colors.black,
+                                 fontSize: 16.0
+                             );
+                  },
+                  child:const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.auto_delete),

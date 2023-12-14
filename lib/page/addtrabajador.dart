@@ -12,28 +12,24 @@ import '../response/response.dart';
 
 
 class AddTrabajador extends StatelessWidget {
- /*  final qr;  
+  final qr;  
   final idcartilla;
   final swtipoescan;
   const AddTrabajador({super.key,required this.qr,required this.idcartilla,required this.swtipoescan});
-  */ 
-  const AddTrabajador({super.key});
+   
+ // const AddTrabajador({super.key});
   @override
   Widget build(BuildContext context) {
-      
        return Scaffold(
-        appBar: AppBar(title: Text('Agregar Trabajador')),
-       
+        appBar: AppBar(title:const Text('Agregar Trabajador')),
          body: MultiProvider(
           providers: [
-             ChangeNotifierProvider(create: (context)=> TrabajadorxContratistaProvider()),
-              ChangeNotifierProvider(create: (context)=> Connectivity_provider())
+            ChangeNotifierProvider(create: (context)=> AddTrabajadorContratistaProvider()),
+            ChangeNotifierProvider(create: (context)=> Connectivity_provider())
           ],
-          child: _addTrabajador(qr: '71462409',idcartilla:'5',swtipoescan:'1'),
+          child: _addTrabajador(qr: this.qr,idcartilla:this.idcartilla,swtipoescan:this.swtipoescan),
         ), 
-      ); 
-
- 
+      );
   }
 }
 
@@ -48,15 +44,9 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
   @override
   Widget build(BuildContext context) {
     TextEditingController controlladorqr= TextEditingController(text: qr);
-    TextEditingController controlladorrut=TextEditingController();
-    TextEditingController controlladornombre=TextEditingController();
+
     TextEditingController controlladorcantidad=TextEditingController(text:"1");
-    
-    
-    final _textname=GlobalKey<FormFieldState>();
-    
-    
-    final trabajadorcontratista=Provider.of<TrabajadorxContratistaProvider>(context);
+    final trabajadorcontratista=Provider.of<AddTrabajadorContratistaProvider>(context);
       bool _validarut(String? rut) {
        if (rut == null) return false;
         final regExp = RegExp(
@@ -64,42 +54,36 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
         );
         return regExp.hasMatch(rut);
     } 
- 
- 
-    
+
     return Container(
-      
       child: 
        Form(
-        key: trabajadorcontratista.formkey,
-        
+        key: trabajadorcontratista.formaddkey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
         children: [
-
-        
             Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16,vertical: 8),
+            padding:const EdgeInsets.symmetric(horizontal: 16,vertical: 8),
             child: TextFormField(    
-              controller: controlladorqr,                enabled: false,
+              controller: controlladorqr,
+              enabled: false,
               onChanged: ((value) => trabajadorcontratista.Qr),
               decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
                 labelText: 'Qr Trabajador',
-                prefix: Icon(Icons.assignment_ind_outlined)              
+                prefix:const Icon(Icons.assignment_ind_outlined)              
               ),
             ),
           ),
           
            Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16,vertical: 8),
+            padding:const EdgeInsets.symmetric(horizontal: 16,vertical: 8),
             child:
               TextFormField(
                   autocorrect: false,           
                   onChanged: (value)=>{ 
                     trabajadorcontratista.Rut=value               
                   },
-            
                   validator: (value){
                     return trabajadorcontratista.validarut 
                           ? (value==null || value.isEmpty ) ? 'Debe ingresar un rut' : _validarut(value) ? null :'Debe ingresar un rut valido'
@@ -113,7 +97,7 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
               ),
            ),
            Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16,vertical: 8),
+            padding:const EdgeInsets.symmetric(horizontal: 16,vertical: 8),
             child: TextFormField(      
               autocorrect: false,              
                onChanged: (value) =>{trabajadorcontratista.Nombre=value}, 
@@ -125,15 +109,13 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
                decoration: InputDecoration(
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
                 labelText: 'Nombre Trabajador',
-                prefix: Icon(Icons.person)
+                prefix:const Icon(Icons.person)
                 
               ), 
             ),
           ),
-           
-            
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 8,horizontal: 16),
+            padding:const EdgeInsets.symmetric(vertical: 8,horizontal: 16),
             child: swtipoescan=="0" ? TextFormField(
               maxLines: 1,
               controller: controlladorcantidad,
@@ -141,7 +123,6 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
               onChanged: (value)=>{
                 trabajadorcontratista.cantidad=int.parse(value),             
               },
-        
                validator: (value) {
                 return (value == null || value.isEmpty  )
                     ? 'Debe ingresar una cantidad valido'
@@ -151,14 +132,13 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
                 labelText: 'Ingrese cantidad de entregas',
                 prefix:const Icon(Icons.add_card)
-                
               ),
             )
             :Container()
           
           ),  
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16,vertical: 8),
+            padding:const EdgeInsets.symmetric(horizontal: 16,vertical: 8),
             child: SwitchListTile(
               title:const Text('Valida Rut Chile'),
               value: trabajadorcontratista.validarut,
@@ -178,54 +158,50 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
               disabledColor: Colors.red,
         
               color: Colors.blue,
-              child: Text('Agregar Trabajador',style: TextStyle(color: Colors.white),),
-                onPressed:trabajadorcontratista.isLoading ? null :()async{
+              child: trabajadorcontratista.isLoading
+                  ? const SizedBox(
+                height: 50,
+                width: 50,
+                //child: EasyLoading.showInfo('CARGANDO',duration: Duration(seconds: 2)),
+                child: CupertinoActivityIndicator(),
+              ) : const Text('Agregar Trabajador',style: TextStyle(color: Colors.white),),
+                onPressed:()async{
                   FocusScope.of(context).unfocus(); 
                   if(!trabajadorcontratista.isValidateForm())return;
+                  trabajadorcontratista.isLoading=true;
                   trabajadorcontratista.Qr=controlladorqr.value.text;
-                    
-                  
                   Trabajador trabajador=Trabajador(
                     qr: trabajadorcontratista.Qr, 
                     nombre: trabajadorcontratista.Nombre,
-                    rut: trabajadorcontratista.Rut,
-                    
+                    rut: trabajadorcontratista.Rut,                    
                    ); 
                   int insert=await trabajadorcontratista.insertnewtrabajadorcontratista(trabajador);
-                  
                   if(insert>0){
-                    
                     final today=DateTime.now();
                     final date=DateFormat('dd/MM/yyyy').format(today);
-                    EntregaResponse entrega=EntregaResponse(
-                      idcartilla: this.idcartilla,
-                      qr: this.qr, 
-                      cantidad: trabajadorcontratista.Swunoauno==1 ? 1 : trabajadorcontratista.cantidad, 
-                      fecha: date, 
-                      swsincronizado: '0');
-                    int inserto=await trabajadorcontratista.insertentry(entrega) ;
-                    List<QrCartillaResponse> lista=await trabajadorcontratista.getcartillasdisponibles(); 
+                    int cantidad=int.parse(controlladorcantidad.text);
+                    Entrega entrega=Entrega(idcartilla: this.idcartilla, qr: this.qr, cantidad: cantidad, fecha: date, hora: today.toString(), swsincronizado: '0');;
+                    await trabajadorcontratista.insertentry(entrega);
+                    List<QrCartillaResponse>?fechainiciocartilla=await trabajadorcontratista.getfechainiciobyidcartilla(this.idcartilla);
+                    fechainiciocartilla==null || fechainiciocartilla.length==0 ? null
+                        : trabajadorcontratista.updatehorainicio(this.idcartilla) ;
+
+
+                    List<QrCartillaResponse> lista=await trabajadorcontratista.getcartillasdisponibles();
                       Future.microtask(() => {
                         Navigator.pushReplacement(context, PageRouteBuilder(
                           pageBuilder: ( _, __ , ___ ) => MainDashboard(lista: lista,),
-                          transitionDuration:const Duration( seconds: 3)
+                          transitionDuration:const Duration( seconds: 1)
                           )
                         )
-        
                       });
-        
                   }           
                 },
-                
                 ),
-            ), 
-            
-             
-          
+            ),
         ]
         )
       )
-      
     );
   }
 }

@@ -7,14 +7,19 @@ class QrCartillaResponse{
     String fechainicio;
     String fechatermino;
     String swunoauno;
-
+    String? horainicio;
+    String? horatermino;
+    String  swSincronizado;
     QrCartillaResponse({
         required this.idcartilla,
         required this.cuartel,
         required this.labor,
         required this.fechainicio,
         required this.fechatermino,
-        required this.swunoauno
+        required this.swunoauno,
+        this.horainicio,
+        this.horatermino,
+        required this.swSincronizado,
     });
 
     factory QrCartillaResponse.fromJson(String str) => QrCartillaResponse.fromMap(json.decode(str));
@@ -28,6 +33,9 @@ class QrCartillaResponse{
         fechainicio: json["fechainicio"],
         fechatermino: json["fechatermino"],
         swunoauno: json["swunoauno"],
+        horainicio: json["HoraInicio"],
+        horatermino: json["HoraTermino"],
+        swSincronizado: json["SwSincronizado"]
     );
 
     Map<String, dynamic> toMap() => {
@@ -36,6 +44,9 @@ class QrCartillaResponse{
         "Labor": labor,
         "Fechainicio": fechainicio,
         "Fechatermino": fechatermino,
-        "SwUnoaUno":swunoauno
+        "SwUnoaUno":swunoauno,
+        "HoraInicio":horainicio,
+        "HoraTermino":horatermino,
+        "SwSincronizado":swSincronizado
     };
 }

@@ -30,7 +30,10 @@ class DBProvider extends ChangeNotifier{
             Labor TEXT,
             FechaInicio TEXT,
             FechaTermino TEXT,
-            SwUnoaUno TEXT
+            SwUnoaUno TEXT,
+            HoraInicio TEXT,
+            HoraTermino TEXT,
+            SwSincronizado TEXT
             )
             '''
           );
@@ -59,8 +62,6 @@ class DBProvider extends ChangeNotifier{
               Cantidad integer,
               Fecha TEXT,
               Hora TEXT,
-              Nombre_trabajador TEXT,
-              Rut TEXT,
               SwSincronizado TEXT
             )
 
@@ -85,15 +86,16 @@ class DBProvider extends ChangeNotifier{
    
     final db=await database;
     final List<Map<String,dynamic>>res=await db.rawQuery('''
-      SELECT * FROM CARTILLAS WHERE IdCartilla='$idcartilla'  
+      SELECT * FROM CARTILLAS WHERE IdCartilla='$idcartilla'  and HoraTermino is null
       ''');
     return List.generate(res.length, (index) => QrCartillaResponse(
       idcartilla: res[index]['IdCartilla'],
       cuartel: res[index]['Cuartel'],
       labor:res[index]['Labor'],
       fechainicio: res[index]['FechaInicio'],
-      fechatermino: res[index]['FechaTermino'],
-      swunoauno: res[index]['SwUnoaUno']
+      fechatermino: res[index]['FechaTermino'], 
+      swunoauno: res[index]['SwUnoaUno'],
+      swSincronizado: res[index]['SwSincronizado']
     ));
   } 
 
@@ -103,6 +105,7 @@ class DBProvider extends ChangeNotifier{
     final res=await db.insert('CARTILLAS', qrcartilla.toMap());
     return res;
   }
+
 
 
   Future<List<QrCartillaResponse>>getcartillasdisponibles()async{
@@ -121,7 +124,8 @@ class DBProvider extends ChangeNotifier{
         labor:res[index]['Labor'],
         fechainicio: res[index]['FechaInicio'],
         fechatermino: res[index]['FechaTermino'],
-        swunoauno: res[index]['SwUnoaUno']
+        swunoauno: res[index]['SwUnoaUno'],
+        swSincronizado: res[index]['SwSincronizado']
     ));
   }
 
