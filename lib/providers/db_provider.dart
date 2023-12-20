@@ -74,7 +74,7 @@ class DBProvider extends ChangeNotifier{
           if (olversion < newverion) {
 
             // you can execute drop table and create table
-            await db.execute("ALTER TABLE TRABAJADORESXCONTRATISTA ADD COLUMN IdTrabXContratista TEXT");
+          //  await db.execute("ALTER TABLE TRABAJADORESXCONTRATISTA ADD COLUMN IdTrabXContratista TEXT");
           }
         }
     );

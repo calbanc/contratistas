@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io' show Platform;
 class Dashboard extends StatelessWidget {
 
   Dashboard({super.key,required this.lista});
@@ -195,7 +196,13 @@ class Dashboard extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          MaterialButton(onPressed: (){},child: Icon(Icons.settings),)
+          MaterialButton(
+            onPressed: (){
+                Navigator.push(context,  MaterialPageRoute(
+                  builder: ((context) =>  Configuracion())));
+            },
+            child:const Icon(Icons.settings),
+          )
         ],
       ),
       body:
@@ -321,18 +328,7 @@ class Dashboard extends StatelessWidget {
 
                     ),
                 ),
-           /*     Container(
-                  width: size.width*0.7,
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: DropdownSearch<QrCartillaResponse>(
-                  items:lista!,
-                  onChanged: (QrCartillaResponse? value) =>{
-                    trabajadorcontratisprovider.setidcartilla=value!.idcartilla,
-                    trabajadorcontratisprovider.setswunoauno=value!.swunoauno,
-                  } ,
-                  itemAsString: (QrCartillaResponse qr)=>qr.cuartel,
-                )
-                ),*/
+
                 Container(
                   width: size.width*0.3,
                   height: 45,
@@ -358,21 +354,24 @@ class Dashboard extends StatelessWidget {
                           String idcartilla=split[0];
                           String cuartel=split[1];
                           String labor=split[2];
-                          String fechainicio=split[3];
-                          String fechatermino=split[4];
+                          String fechainicio=split[4];
                           String swunoauno=split[5];
                           var datefechainicio=DateTime.parse(fechainicio);
+
                           final now=DateTime.now();
-                          DateTime today = new DateTime(now.year, now.month, now.day);                
+                          DateTime today = new DateTime(now.year, now.month, now.day);
+
+
                           if( today.compareTo(datefechainicio)==0){
                             final qr=QrCartillaResponse(
-                              idcartilla: idcartilla,
-                              cuartel: cuartel,
-                              labor: labor,
-                              fechainicio: fechatermino,
-                              fechatermino: fechatermino,
-                              swunoauno: swunoauno,
-                              swSincronizado: '0'
+                                idcartilla: idcartilla,
+                                cuartel: cuartel,
+                                labor: labor,
+                                fechainicio: fechainicio,
+                                fechatermino: fechainicio,
+                                swunoauno:swunoauno,
+                                swSincronizado: '0'
+
                             ) ;
                             final respuesta= await trabajadorcontratisprovider.consultaqr(qr);
                             if(respuesta.length<1) {
@@ -424,7 +423,10 @@ class Dashboard extends StatelessWidget {
                         return Text('0');
                       }else{
                         String cantidadentregas=snapshot.data![0].cantidad.toString();
-                        return Text(cantidadentregas == "null" ?'0':cantidadentregas,style: TextStyle(fontWeight: FontWeight.w900,fontSize: 20),);
+                        return Text(
+
+                          cantidadentregas == "null" ?'0':cantidadentregas,style: TextStyle(fontWeight: FontWeight.w900,fontSize: 20)
+                        );
                       }
                   }),
 
@@ -442,20 +444,46 @@ class Dashboard extends StatelessWidget {
                   child: const Text('Cerrar Cartilla',),
                   onPressed: ()async{
 
-                    List<QrCartillaResponse>?fechahoratermino=await trabajadorcontratisprovider.gethoraterminobyidcartilla(trabajadorcontratisprovider.IdCartilla);
-                    fechahoratermino==null || fechahoratermino.length==0 ? null
-                        : trabajadorcontratisprovider.updatehoratermino(trabajadorcontratisprovider.IdCartilla) ;
-                    trabajadorcontratisprovider.formkeylistacartilla.currentState!.clear();
                     showDialog(
                         context: context,
                         builder: (BuildContext context) => CupertinoAlertDialog(
                           title: new Text("Cierre de planilla"),
                           content: new Text("Planilla Cerrada correctamente"),
+                          actions: [
+                            CupertinoButton(child: Text('Cerrar'), onPressed: ()async{
+                              List<QrCartillaResponse>?fechahoratermino=await trabajadorcontratisprovider.gethoraterminobyidcartilla(trabajadorcontratisprovider.IdCartilla);
+                              fechahoratermino==null || fechahoratermino.length==0 ? null
+                                  : trabajadorcontratisprovider.updatehoratermino(trabajadorcontratisprovider.IdCartilla) ;
+                              trabajadorcontratisprovider.setidcartilla='';
+                              trabajadorcontratisprovider.formkeylistacartilla.currentState!.clear();
+                              Navigator.pop(context);
+                              Fluttertoast.showToast(
+                                  msg: "CARTILLA CERRADA CORRECTAMENTE",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  backgroundColor: Colors.grey[300],
+                                  timeInSecForIosWeb: 1,
+                                  textColor: Colors.black,
+                                  fontSize: 16.0
+                              );
+
+                            }),
+                            CupertinoButton(child: Text('Cancelar'), onPressed:(){
+                              Navigator.pop(context);
+                            } )
+                          ],
+
 
                         )
 
 
                     );
+
+
+
+
+
+
 
                   },
                 ),
@@ -487,13 +515,13 @@ class Dashboard extends StatelessWidget {
 
                               if(trabajadorcontratisprovider.IdCartilla==''){
                                 Fluttertoast.showToast(
-                                 msg: "Debe seleccionar una Cartilla",
-                                 toastLength: Toast.LENGTH_SHORT,
-                                 gravity: ToastGravity.BOTTOM,
-                                 backgroundColor: Colors.grey[300],
-                                 timeInSecForIosWeb: 1,
-                                 textColor: Colors.black,
-                                 fontSize: 16.0
+                                    msg: "Debe seleccionar una Cartilla",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                    backgroundColor: Colors.grey[300],
+                                    timeInSecForIosWeb: 1,
+                                    textColor: Colors.black,
+                                    fontSize: 16.0
                                 );
                                 return;
                               }
@@ -552,7 +580,7 @@ class _widgetlistado extends StatelessWidget {
               child: Card(
                 elevation: 10,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.horizontal(left: Radius.circular(8),right: Radius.circular(8))),
-                      color: Colors.white,
+                color: Colors.white,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
 

@@ -9,7 +9,8 @@ class ListadoEntregaResponse{
     String? idcartilla;
     int? identrega;
     String? qr;
-    
+    String? rut;
+    String? digito;
     ListadoEntregaResponse({
         this.cuartel,
          this.labor,
@@ -17,7 +18,9 @@ class ListadoEntregaResponse{
          this.nombre,
          this.idcartilla,
          this.identrega,
-         this.qr
+         this.qr,
+        this.rut,
+        this.digito
     });
 
   
@@ -29,6 +32,8 @@ class ListadoEntregaResponse{
         idcartilla: json["IdCartilla"],
         identrega: json["IdEntrega"],
         qr:json["Qr"],
+        rut: json["Rut"],
+        digito: json["Digito"]
         
     );
 
@@ -39,6 +44,9 @@ class ListadoEntregaResponse{
         "Cantidad": cantidad,
         "IdCartilla":idcartilla,
         "IdEntrega":identrega,
-        "Qr":qr
+        "Qr":qr,
+        "Rut":rut,
+        "Digito":digito
+
     };
 }

@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 class TrabajadorxContratistaProvider extends ChangeNotifier{
   GlobalKey<FormState> formkey =  GlobalKey<FormState>();
+
   GlobalKey<DropdownSearchState> formkeylistacartilla =  GlobalKey<DropdownSearchState>();
   final String _baseUrl = "app.verfrut.cl";
   static Database? _database;
@@ -78,7 +79,7 @@ bool get isLoading => _isLoading;
   }
 
   Future<List<Trabajador>>getlistado(String IdCartilla)async{
-    const String _endpoint ='/api-pruebas/public/index.php/api/trabajadorxcontratista/gettrabajadoresbycontratista';
+    const String _endpoint ='/api-app/public/index.php/api/trabajadorxcontratista/gettrabajadoresbycontratista';
     final Map<String,dynamic>data={'IdCartilla':IdCartilla};
     String parametros=json.encode(data);
     final url = Uri.https(_baseUrl, _endpoint);
@@ -89,7 +90,7 @@ bool get isLoading => _isLoading;
     return respuesta.trabajador;
   }
   Future<SyncEntregasResponse>sync(EntregaResponse entrega)async{
-    const String _endpoint ='/api-pruebas/public/index.php/api/androidcartilladetalle/save';
+    const String _endpoint ='/api-app/public/index.php/api/androidcartilladetalle/save';
     final Map<String,dynamic>data={'IdCartilla':entrega.idcartilla,'Qr':entrega.qr,"Fecha":entrega.fecha,"Cantidad":entrega.cantidad,"Nombre_trabajador":entrega.nombre_trabajador,"IdEntrega":entrega.identrega,"Rut":entrega.rut,"IdTrabajadorXContratista":entrega.idtrabajadorxcontratista,"Digito":entrega.digito};
     String parametros=json.encode(data);
     final url = Uri.https(_baseUrl, _endpoint);
@@ -124,7 +125,7 @@ bool get isLoading => _isLoading;
     ));
   }
   Future<http.Response>synccartillashoras(QrCartillaResponse cartilla)async{
-    const String _endpoint ='/api-pruebas/public/index.php/api/androidcartilla/update';
+    const String _endpoint ='/api-app/public/index.php/api/androidcartilla/update';
     final Map<String,dynamic>data={'IdCartilla':cartilla.idcartilla,'HoraInicio':cartilla.horainicio,'HoraTermino':cartilla.horatermino};
     String parametros=json.encode(data);
     final url = Uri.https(_baseUrl, _endpoint);
@@ -301,6 +302,17 @@ Future<int>updateSync(String identrega) async {
         res.map((e) => ListadoEntregaResponse.fromJson(e)).toList() 
         :null ;
   }
+
+  Future<List<Trabajador>?>gettrabajadorbyrut(String rut)async{
+   final db=await database;
+   final res=await db.rawQuery(
+       ''' SELECT * FROM TRABAJADORESXCONTRATISTA WHERE Rut='$rut' '''
+   );
+   return res.isNotEmpty?
+    res.map((e) => Trabajador.fromJson(e)).toList()
+       :null;
+  }
+
 
   Future<List<EntregaResponse>> getentryforsync(String fecha) async{
     final db=await database;
