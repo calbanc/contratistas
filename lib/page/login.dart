@@ -59,8 +59,8 @@ class Login extends StatelessWidget {
                 String idcartilla=split[0];
                 String cuartel=split[1];
                 String labor=split[2];
-                String fechainicio=split[4];
-                String swunoauno=split[5];
+                String fechainicio=split[3];
+                String swunoauno=split[4];
                 var datefechainicio=DateTime.parse(fechainicio);
 
                 final now=DateTime.now();

@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 
 class AddTrabajadorContratistaProvider extends ChangeNotifier{
   GlobalKey<FormState> formaddkey =  GlobalKey<FormState>();
+  TextEditingController controlladornombre=TextEditingController();
   String Rut='';
   String Digito='';
   String Nombre='';
@@ -60,8 +61,28 @@ class AddTrabajadorContratistaProvider extends ChangeNotifier{
 
   Future<int>insertnewtrabajadorcontratista(Trabajador trabajador)async{
     final db=await database;
-    final res=await db.insert('TRABAJADORESXCONTRATISTA', trabajador.toJson());
-    return res;
+    String rut=trabajador.rut!;
+    String qr=trabajador.qr;
+    final res1=await db.query('TRABAJADORESXCONTRATISTA',where:'Rut=?',whereArgs: [rut]);
+    List<Trabajador>listado=res1.map((e) => Trabajador.fromJson(e)).toList();
+    if(listado.length>0){
+      final res2=await db.rawUpdate('''UPDATE TRABAJADORESXCONTRATISTA SET Qr= '$qr' WHERE Rut='$rut' ''');
+      final res3=await db.query('TRABAJADORESXCONTRATISTA',where:'Rut<>? AND Qr=? ' ,whereArgs: [rut,qr]);
+      List<Trabajador>listado1=res3.map((e) => Trabajador.fromJson(e)).toList();
+      if(listado1.length>0){
+        String newqr=listado1[0].rut!;
+        final res2=await db.rawUpdate('''UPDATE TRABAJADORESXCONTRATISTA SET Qr= '$newqr' WHERE Rut='$newqr' ''');
+      }
+
+      return res2;
+
+    }else{
+      final res=await db.insert('TRABAJADORESXCONTRATISTA', trabajador.toJson());
+      return res;
+    }
+
+
+
   }
   Future<int>insertentry(Entrega entry)async{
     final db=await database;
@@ -113,5 +134,14 @@ class AddTrabajadorContratistaProvider extends ChangeNotifier{
       UPDATE CARTILLAS SET HoraInicio= '$hora' , SwSincronizado='0' WHERE IdCartilla='$idCartilla'
     ''');
     return res;
+  }
+  Future<List<Trabajador>?>gettrabajadorbyrut(String rut)async{
+    final db=await database;
+    final res=await db.rawQuery(
+        ''' SELECT * FROM TRABAJADORESXCONTRATISTA WHERE Rut='$rut' '''
+    );
+    return res.isNotEmpty?
+    res.map((e) => Trabajador.fromJson(e)).toList()
+        :null;
   }
 }

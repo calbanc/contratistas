@@ -79,26 +79,48 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
            Padding(
             padding:const EdgeInsets.symmetric(horizontal: 16,vertical: 8),
             child:
-              TextFormField(
-                  autocorrect: false,           
-                  onChanged: (value)=>{ 
-                    trabajadorcontratista.Rut=value               
+              FocusScope(
+                child: Focus(
+                  onFocusChange: (focus)async{
+                    if(focus==false){
+                      print('se pierde el foco');
+                      print(trabajadorcontratista.Rut);
+                      //consultamos el trabajador en la base de datos
+                     List<Trabajador>?listatra=await trabajadorcontratista.gettrabajadorbyrut(trabajadorcontratista.Rut);
+                     trabajadorcontratista.controlladornombre.text=listatra![0].nombre;
+                     print(listatra![0].nombre);
+                      /*if(listatra!.length>0){
+                        trabajadorcontratista.Nombre=listatra![0].nombre!;
+                        print(trabajadorcontratista.Nombre);
+                      }*/
+
+                    }
                   },
-                  validator: (value){
-                    return trabajadorcontratista.validarut 
-                          ? (value==null || value.isEmpty ) ? 'Debe ingresar un rut' : _validarut(value) ? null :'Debe ingresar un rut valido'
-                          :null;
-                  }, 
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
-                    labelText: 'Rut Trabajador',
-                    prefix:const Icon(Icons.add_card)                
+                  child: TextFormField(
+
+                      autocorrect: false,
+                      onChanged: (value)=>{
+                        trabajadorcontratista.Rut=value
+                      },
+                      validator: (value){
+                        return trabajadorcontratista.validarut
+                              ? (value==null || value.isEmpty ) ? 'Debe ingresar un rut' : _validarut(value) ? null :'Debe ingresar un rut valido'
+                              :null;
+                      },
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
+                        labelText: 'Rut Trabajador',
+                        prefix:const Icon(Icons.add_card)
+                      ),
                   ),
+                ),
               ),
            ),
            Padding(
             padding:const EdgeInsets.symmetric(horizontal: 16,vertical: 8),
-            child: TextFormField(      
+            child: TextFormField(
+              controller: trabajadorcontratista.controlladornombre,
+
               autocorrect: false,              
                onChanged: (value) =>{trabajadorcontratista.Nombre=value}, 
                validator: (value) {
@@ -170,11 +192,14 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
                   if(!trabajadorcontratista.isValidateForm())return;
                   trabajadorcontratista.isLoading=true;
                   trabajadorcontratista.Qr=controlladorqr.value.text;
+
                   Trabajador trabajador=Trabajador(
                     qr: trabajadorcontratista.Qr, 
-                    nombre: trabajadorcontratista.Nombre,
+                    nombre: trabajadorcontratista.Nombre=='' ? trabajadorcontratista.controlladornombre.text:trabajadorcontratista.Nombre ,
                     rut: trabajadorcontratista.Rut,                    
-                   ); 
+                   );
+
+
                   int insert=await trabajadorcontratista.insertnewtrabajadorcontratista(trabajador);
                   if(insert>0){
                     final today=DateTime.now();
@@ -185,8 +210,6 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
                     List<QrCartillaResponse>?fechainiciocartilla=await trabajadorcontratista.getfechainiciobyidcartilla(this.idcartilla);
                     fechainiciocartilla==null || fechainiciocartilla.length==0 ? null
                         : trabajadorcontratista.updatehorainicio(this.idcartilla) ;
-
-
                     List<QrCartillaResponse> lista=await trabajadorcontratista.getcartillasdisponibles();
                       Future.microtask(() => {
                         Navigator.pushReplacement(context, PageRouteBuilder(
@@ -195,7 +218,7 @@ const _addTrabajador({required this.qr,required this.idcartilla,required this.sw
                           )
                         )
                       });
-                  }           
+                  }
                 },
                 ),
             ),

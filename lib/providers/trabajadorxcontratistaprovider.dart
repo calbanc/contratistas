@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 class TrabajadorxContratistaProvider extends ChangeNotifier{
   GlobalKey<FormState> formkey =  GlobalKey<FormState>();
+  GlobalKey<FormState> formkey2 =  GlobalKey<FormState>();
 
   GlobalKey<DropdownSearchState> formkeylistacartilla =  GlobalKey<DropdownSearchState>();
   final String _baseUrl = "app.verfrut.cl";
@@ -60,7 +61,14 @@ bool get isLoading => _isLoading;
     notifyListeners();
 }
 
-
+  TextEditingController controlladoridentrega=TextEditingController();
+  TextEditingController controlladorcartilla=TextEditingController();
+  TextEditingController controlladornombre=TextEditingController();
+  TextEditingController controlladorcantidad=TextEditingController();
+  TextEditingController controlladorlabor=TextEditingController();
+  TextEditingController controlladorqr=TextEditingController();
+  TextEditingController controlladorrut=TextEditingController();
+  TextEditingController controlladordigito=TextEditingController();
 
   Future<Database> initDB() async{
 
@@ -146,9 +154,10 @@ bool get isLoading => _isLoading;
     final db=await database;
 
     final res=await db.rawUpdate(''' 
-      UPDATE CARITLLAS SET SwSincronizado='1' WHERE IdCartilla='$idcartilla'
+      UPDATE CARTILLAS SET SwSincronizado='1' WHERE IdCartilla='$idcartilla'
     ''');
     return res;
+
 
   }
 
@@ -243,6 +252,38 @@ Future<List<QrCartillaResponse>>gethoraterminobyidcartilla(String idcartilla)asy
       UPDATE ENTREGAS SET CANTIDAD= '$cantidad' , SwSincronizado='0',Hora='$hora' WHERE IdEntrega='$identrega'
     ''');
     return res;
+
+  }
+  Future<int>updatetrabajador(Trabajador trabajador) async {
+    final db=await database;
+    String rut=trabajador.rut!;
+    String qr=trabajador.qr;
+    final res1=await db.query('TRABAJADORESXCONTRATISTA',where:'Rut=?',whereArgs: [rut]);
+    List<Trabajador>listado=res1.map((e) => Trabajador.fromJson(e)).toList();
+    if(listado.length>0){
+      final res2=await db.rawUpdate('''UPDATE TRABAJADORESXCONTRATISTA SET Qr= '$qr' WHERE Rut='$rut' ''');
+      final res3=await db.query('TRABAJADORESXCONTRATISTA',where:'Rut<>? AND Qr=? ' ,whereArgs: [rut,qr]);
+      List<Trabajador>listado1=res3.map((e) => Trabajador.fromJson(e)).toList();
+      if(listado1.length>0){
+        String newqr=listado1[0].rut!;
+        final res2=await db.rawUpdate('''UPDATE TRABAJADORESXCONTRATISTA SET Qr= '$newqr' WHERE Rut='$newqr' ''');
+      }
+
+      return res2;
+
+    }else{
+      final res=await db.insert('TRABAJADORESXCONTRATISTA', trabajador.toJson());
+      final res3=await db.query('TRABAJADORESXCONTRATISTA',where:'Rut<>? AND Qr=? ' ,whereArgs: [rut,qr]);
+      List<Trabajador>listado1=res3.map((e) => Trabajador.fromJson(e)).toList();
+      if(listado1.length>0){
+        String newqr=listado1[0].rut!;
+        final res2=await db.rawUpdate('''UPDATE TRABAJADORESXCONTRATISTA SET Qr= '$newqr' WHERE Rut='$newqr' ''');
+      }
+      return res;
+    }
+
+
+
 
   }
   Future<int> updatehorainicio(String idCartilla)async{

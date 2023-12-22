@@ -282,6 +282,13 @@ class Dashboard extends StatelessWidget {
                                   await trabajadorcontratisprovider.updateSync(respuestasync.cartilladetalle.idEntrega.toString())
                                 }
                               });
+                              showDialog(context: context, builder: ((context) {
+                                return Center(child: CupertinoAlertDialog(
+                                  content: Row(children: const [
+                                    Text('Entregas Sincronizadas correctamente'),
+                                  ],),
+                                ),);
+                              }));
                             }
 
 
@@ -354,8 +361,8 @@ class Dashboard extends StatelessWidget {
                           String idcartilla=split[0];
                           String cuartel=split[1];
                           String labor=split[2];
-                          String fechainicio=split[4];
-                          String swunoauno=split[5];
+                          String fechainicio=split[3];
+                          String swunoauno=split[4];
                           var datefechainicio=DateTime.parse(fechainicio);
 
                           final now=DateTime.now();
@@ -562,7 +569,7 @@ class _widgetlistado extends StatelessWidget {
   Widget build(BuildContext context) {
     final size=MediaQuery.of(context).size;
     return Container(
-        height: 400,
+        height: 300,
         width: size.width*0.9,
         child: ListView.builder(
           itemCount: listado.length,
